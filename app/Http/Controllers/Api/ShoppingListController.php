@@ -9,27 +9,20 @@ use App\Models\ShoppingList;
 class ShoppingListController extends Controller
 {
     /**
-     * Mostrar todas las listas de compras con productos
+     * Mostrar todas las listas de compras del usuario autenticado con sus productos
      */
     public function index()
     {
-        $lists = ShoppingList::with('products')->get();
-
-        if ($lists->isEmpty()) {
-            return response()->json([
-                'message' => 'No hay listas disponibles',
-                'data' => []
-            ], 200);
-        }
+        $lists = auth()->user()->shoppingLists()->with('products')->get();
 
         return response()->json([
-            'message' => 'Listas obtenidas con éxito',
+            'message' => $lists->isEmpty() ? 'No hay listas disponibles' : 'Listas obtenidas con éxito',
             'data' => $lists
         ], 200);
     }
 
     /**
-     * Crear una nueva lista de compras
+     * Crear una nueva lista de compras para el usuario autenticado
      */
     public function store(Request $request)
     {
@@ -37,7 +30,7 @@ class ShoppingListController extends Controller
             'name' => 'required|string|max:255',
         ]);
 
-        $list = ShoppingList::create([
+        $list = auth()->user()->shoppingLists()->create([
             'name' => $request->name,
         ]);
 
@@ -48,11 +41,11 @@ class ShoppingListController extends Controller
     }
 
     /**
-     * Mostrar una lista específica con productos
+     * Mostrar una lista específica del usuario autenticado con sus productos
      */
     public function show(string $id)
     {
-        $list = ShoppingList::with('products')->find($id);
+        $list = auth()->user()->shoppingLists()->with('products')->find($id);
 
         if (!$list) {
             return response()->json([
@@ -68,11 +61,11 @@ class ShoppingListController extends Controller
     }
 
     /**
-     * Actualizar una lista de compras
+     * Actualizar una lista de compras del usuario autenticado
      */
     public function update(Request $request, string $id)
     {
-        $list = ShoppingList::find($id);
+        $list = auth()->user()->shoppingLists()->find($id);
 
         if (!$list) {
             return response()->json([
@@ -94,11 +87,11 @@ class ShoppingListController extends Controller
     }
 
     /**
-     * Eliminar una lista de compras
+     * Eliminar una lista de compras del usuario autenticado
      */
     public function destroy(string $id)
     {
-        $list = ShoppingList::find($id);
+        $list = auth()->user()->shoppingLists()->find($id);
 
         if (!$list) {
             return response()->json([

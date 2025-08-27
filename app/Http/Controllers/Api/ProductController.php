@@ -10,44 +10,37 @@ use App\Models\ShoppingList;
 class ProductController extends Controller
 {
     /**
-     * Listar productos de una lista de compras
+     * Listar productos de una lista del usuario autenticado
      */
     public function index($listId)
     {
-        $list = ShoppingList::find($listId);
+        $list = auth()->user()->shoppingLists()->find($listId);
 
         if (!$list) {
             return response()->json([
-                'message' => 'Lista no encontrada',
+                'message' => 'Lista no encontrada o no pertenece al usuario',
                 'data' => []
             ], 404);
         }
 
         $products = $list->products;
 
-        if ($products->isEmpty()) {
-            return response()->json([
-                'message' => 'No hay productos en esta lista',
-                'data' => []
-            ], 200);
-        }
-
         return response()->json([
-            'message' => 'Productos obtenidos con éxito',
+            'message' => $products->isEmpty() ? 'No hay productos en esta lista' : 'Productos obtenidos con éxito',
             'data' => $products
         ], 200);
     }
 
     /**
-     * Agregar un producto a la lista
+     * Agregar un producto a una lista del usuario autenticado
      */
     public function store(Request $request, $listId)
     {
-        $list = ShoppingList::find($listId);
+        $list = auth()->user()->shoppingLists()->find($listId);
 
         if (!$list) {
             return response()->json([
-                'message' => 'Lista no encontrada',
+                'message' => 'Lista no encontrada o no pertenece al usuario',
                 'data' => null
             ], 404);
         }
@@ -70,11 +63,20 @@ class ProductController extends Controller
     }
 
     /**
-     * Mostrar un producto específico
+     * Mostrar un producto específico de una lista del usuario autenticado
      */
     public function show($listId, $id)
     {
-        $product = Product::where('shopping_list_id', $listId)->find($id);
+        $list = auth()->user()->shoppingLists()->find($listId);
+
+        if (!$list) {
+            return response()->json([
+                'message' => 'Lista no encontrada o no pertenece al usuario',
+                'data' => null
+            ], 404);
+        }
+
+        $product = $list->products()->find($id);
 
         if (!$product) {
             return response()->json([
@@ -90,11 +92,20 @@ class ProductController extends Controller
     }
 
     /**
-     * Actualizar un producto
+     * Actualizar un producto de una lista del usuario autenticado
      */
     public function update(Request $request, $listId, $id)
     {
-        $product = Product::where('shopping_list_id', $listId)->find($id);
+        $list = auth()->user()->shoppingLists()->find($listId);
+
+        if (!$list) {
+            return response()->json([
+                'message' => 'Lista no encontrada o no pertenece al usuario',
+                'data' => null
+            ], 404);
+        }
+
+        $product = $list->products()->find($id);
 
         if (!$product) {
             return response()->json([
@@ -118,11 +129,20 @@ class ProductController extends Controller
     }
 
     /**
-     * Eliminar un producto
+     * Eliminar un producto de una lista del usuario autenticado
      */
     public function destroy($listId, $id)
     {
-        $product = Product::where('shopping_list_id', $listId)->find($id);
+        $list = auth()->user()->shoppingLists()->find($listId);
+
+        if (!$list) {
+            return response()->json([
+                'message' => 'Lista no encontrada o no pertenece al usuario',
+                'data' => null
+            ], 404);
+        }
+
+        $product = $list->products()->find($id);
 
         if (!$product) {
             return response()->json([
