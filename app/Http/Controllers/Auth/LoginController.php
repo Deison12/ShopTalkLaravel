@@ -4,45 +4,49 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\User;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
 
 class LoginController extends Controller
 {
     public function login(Request $request)
     {
-        // Validar
-        $validator = Validator::make($request->all(), [
-            'email'    => 'required|string|email',
-            'password' => 'required|string|min:6',
-        ]);
+        $credentials = $request->only('email', 'password');
 
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
-        // Buscar usuario
-        $user = User::where('email', $request->email)->first();
-
-        if (!$user || !Hash::check($request->password, $user->password)) {
+        if (!$token = Auth::guard('api')->attempt($credentials)) {
             return response()->json([
                 'status'  => 'error',
                 'message' => 'Credenciales inválidas'
             ], 401);
         }
 
-        // Si quieres manejar tokens (Laravel Sanctum)
-        // $token = $user->createToken('auth_token')->plainTextToken;
+        return $this->respondWithToken($token);
+    }
 
+    public function me()
+    {
+        return response()->json(Auth::guard('api')->user());
+    }
+
+    public function logout()
+    {
+        Auth::guard('api')->logout();
+
+        return response()->json(['message' => 'Sesión cerrada']);
+    }
+
+    public function refresh()
+    {
+        return $this->respondWithToken(Auth::guard('api')->refresh());
+    }
+
+    protected function respondWithToken($token)
+    {
         return response()->json([
-            'status'  => 'success',
-            'message' => 'Login exitoso',
-            'user'    => $user,
-           // 'token' => $token  
-        ], 200);
+            'status'       => 'success',
+            'access_token' => $token,
+            'token_type'   => 'Bearer',
+            'expires_in'   => Auth::guard('api')->factory()->getTTL() * 60,
+            'user'         => Auth::guard('api')->user(),
+        ]);
     }
 }
