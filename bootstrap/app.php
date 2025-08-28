@@ -11,10 +11,10 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
-    ->withMiddleware(function (Middleware $middleware): void {
-        // 👇 Protege las rutas API con JWT
+   ->withMiddleware(function (Middleware $middleware): void {
+        // ⚠️ NO forzamos JWT globalmente
+        // Solo dejamos SubstituteBindings, lo demás se maneja en api.php
         $middleware->api([
-            \PHPOpenSourceSaver\JWTAuth\Http\Middleware\Authenticate::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ]);
     })
